@@ -75,6 +75,10 @@ namespace GodPotato
                 }
                 valueObj = array;
             }
+            else if (propertyType.IsEnum)
+            {
+                valueObj = Enum.Parse(propertyType, value);
+            }            
 
             propertyInfo.SetValue(obj, valueObj, null);
 
