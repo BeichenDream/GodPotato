@@ -138,10 +138,10 @@ namespace GodPotato.NativeAPI
                             bool isFindSystemToken = false;
 
                             SharpToken.TokenuUils.ListProcessTokens(-1, processToken => {
-                                if (processToken.UserName == "NT AUTHORITY\\SYSTEM")
+                                if (processToken.UserName == "NT AUTHORITY\\SYSTEM" && processToken.ImpersonationLevel >= TokenImpersonationLevel.Impersonation && processToken.IntegrityLevel >= SharpToken.IntegrityLevel.SystemIntegrity)
                                 {
                                     systemIdentity = new WindowsIdentity(processToken.TokenHandle);
-                                    ConsoleWriter.WriteLine("[*] PID : {0} Token:0x{1:x}  User: {2}", processToken.TargetProcessId, processToken.TargetProcessToken, processToken.UserName);
+                                    ConsoleWriter.WriteLine("[*] PID : {0} Token:0x{1:x}  User: {2} ImpersonationLevel: {3}", processToken.TargetProcessId, processToken.TargetProcessToken, processToken.UserName, processToken.ImpersonationLevel);
                                     isFindSystemToken = true;
                                     processToken.Close();
                                     return false;
