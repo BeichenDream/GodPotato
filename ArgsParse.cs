@@ -189,7 +189,7 @@ namespace GodPotato
                 stringBuilder.WriteLine(requiredExample); ;
             }
 
-            if (propertyInfoList.Count > 0)
+            if (propertyInfoList.Count > 0 && requiredPropertyList.Count != propertyInfoList.Count)
             {
                 string allParameterExample = "";
                 allParameterExample = appName + " ";
