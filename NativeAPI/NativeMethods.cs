@@ -89,42 +89,9 @@ namespace GodPotato.NativeAPI
         public static readonly int PIPE_ACCESS_DUPLEX = 0x00000003;
 
 
-        public static Guid IUnknownGuid = new Guid("00000000-0000-0000-C000-000000000046");
-        public static Guid IID_IPersistFile = new Guid("0000010b-0000-0000-C000-000000000046");
+
         public static Dictionary<Guid,IntPtr> IIDPTR = new Dictionary<Guid,IntPtr>();
 
-        [Flags]
-        public enum CLSCTX : uint
-        {
-            INPROC_SERVER = 0x1,
-            INPROC_HANDLER = 0x2,
-            LOCAL_SERVER = 0x4,
-            INPROC_SERVER16 = 0x8,
-            REMOTE_SERVER = 0x10,
-            INPROC_HANDLER16 = 0x20,
-            RESERVED1 = 0x40,
-            RESERVED2 = 0x80,
-            RESERVED3 = 0x100,
-            RESERVED4 = 0x200,
-            NO_CODE_DOWNLOAD = 0x400,
-            RESERVED5 = 0x800,
-            NO_CUSTOM_MARSHAL = 0x1000,
-            ENABLE_CODE_DOWNLOAD = 0x2000,
-            NO_FAILURE_LOG = 0x4000,
-            DISABLE_AAA = 0x8000,
-            ENABLE_AAA = 0x10000,
-            FROM_DEFAULT_CONTEXT = 0x20000,
-            ACTIVATE_32_BIT_SERVER = 0x40000,
-            ACTIVATE_64_BIT_SERVER = 0x80000,
-            ENABLE_CLOAKING = 0x100000,
-            APPCONTAINER = 0x400000,
-            ACTIVATE_AAA_AS_IU = 0x800000,
-            ACTIVATE_NATIVE_SERVER = 0x1000000,
-            ACTIVATE_ARM32_SERVER = 0x2000000,
-            PS_DLL = 0x80000000,
-            SERVER = INPROC_SERVER | LOCAL_SERVER | REMOTE_SERVER,
-            ALL = INPROC_SERVER | INPROC_HANDLER | LOCAL_SERVER | REMOTE_SERVER
-        }
         [StructLayout(LayoutKind.Sequential)]
         public struct SECURITY_ATTRIBUTES
         {
@@ -133,25 +100,6 @@ namespace GodPotato.NativeAPI
             public bool bInheritHandle;
         }
 
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct MULTI_QI
-        {
-            public IntPtr pIID;
-            [MarshalAs(UnmanagedType.Interface)]
-            public object pItf;
-            public int hr;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public class COSERVERINFO
-        {
-            public uint dwReserved1;
-            [MarshalAs(UnmanagedType.LPWStr)]
-            public string pwszName;
-            public IntPtr pAuthInfo;
-            public uint dwReserved2;
-        }
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct RPC_VERSION
@@ -210,12 +158,7 @@ namespace GodPotato.NativeAPI
 
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool VirtualProtect(
-    [In] IntPtr pBlock,
-    [In] uint size,
-    [In] uint newProtect,
-    [Out] out uint oldProtect
-);
+        public static extern bool VirtualProtect([In] IntPtr pBlock,[In] uint size,[In] uint newProtect,[Out] out uint oldProtect);
         [DllImport("Advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern bool ConvertStringSecurityDescriptorToSecurityDescriptor(string StringSecurityDescriptor, uint StringSDRevision, out IntPtr SecurityDescriptor, out uint SecurityDescriptorSize);
 
@@ -232,42 +175,13 @@ namespace GodPotato.NativeAPI
         [DllImport("advapi32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool ImpersonateNamedPipeClient(IntPtr hNamedPipe);
-        [DllImport("ole32.dll", PreserveSig = false, ExactSpelling = true)]
-        public static extern int CreateILockBytesOnHGlobal(
-                 IntPtr hGlobal,
-                 [MarshalAs(UnmanagedType.Bool)] bool fDeleteOnRelease,
-                 out ILockBytes ppLkbyt);
-
-        [DllImport("ole32.dll", PreserveSig = false, ExactSpelling = true)]
-        public static extern int StgCreateDocfileOnILockBytes(
-                   ILockBytes plkbyt,
-                   int grfMode,
-                   uint reserved,
-                   out IStorage ppstgOpen);
         [DllImport("ole32.dll")]
-        public static extern int CoGetInstanceFromIStorage(COSERVERINFO pServerInfo, ref Guid pclsid,
-                   [MarshalAs(UnmanagedType.IUnknown)] object pUnkOuter, CLSCTX dwClsCtx,
-                   IStorage pstg, uint cmq, [In, Out] MULTI_QI[] rgmqResults);
+        public static extern int CoUnmarshalInterface(IStream stm, ref Guid riid, out IntPtr ppv);
 
         [DllImport("ole32.dll", PreserveSig = false, ExactSpelling = true)]
         public static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
         [DllImport("ole32.dll", CharSet = CharSet.Unicode, PreserveSig = false, ExactSpelling = true)]
         public static extern int CreateObjrefMoniker(IntPtr pUnk, out IMoniker ppMoniker);
-        public static IntPtr GuidToPointer(Guid g)
-        {
-            IntPtr ret = IntPtr.Zero;
-            lock (IIDPTR)
-            {
-                if (!IIDPTR.TryGetValue(g, out ret))
-                {
-                    ret = Marshal.AllocCoTaskMem(16);
-                    Marshal.Copy(g.ToByteArray(), 0, ret, 16);
-                    IIDPTR[g] = ret;
-                    
-                }
-            }
-            return ret;
-        }
     }
 }

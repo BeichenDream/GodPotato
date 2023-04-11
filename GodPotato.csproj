@@ -40,14 +40,11 @@
   <ItemGroup>
     <Compile Include="ArgsParse.cs" />
     <Compile Include="NativeAPI\GodPotatoContext.cs" />
-    <Compile Include="NativeAPI\GodPotatoStorageTrigger.cs" />
-    <Compile Include="NativeAPI\IEnumSTATSTG.cs" />
-    <Compile Include="NativeAPI\ILockBytes.cs" />
-    <Compile Include="NativeAPI\IMarshal.cs" />
-    <Compile Include="NativeAPI\IStorage.cs" />
-    <Compile Include="NativeAPI\IStream.cs" />
+    <Compile Include="NativeAPI\GodPotatoUnmarshalTrigger.cs" />
+    <Compile Include="NativeAPI\IStreamImpl.cs" />
     <Compile Include="NativeAPI\NativeMethods.cs" />
     <Compile Include="NativeAPI\ObjRef.cs" />
+    <Compile Include="NativeAPI\UnmarshalDCOM.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SharpToken.cs" />

@@ -1135,7 +1135,6 @@ namespace SharpToken
             }
         ret:
             windowsIdentity.Dispose();
-            NativeMethod.CloseHandle(currentThreadToken);
             currentProcess.Dispose();
             return ret;
         }

