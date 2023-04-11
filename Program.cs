@@ -125,7 +125,7 @@ namespace GodPotato
 
                 for (int i = 0; i < clsids.Count; i++)
                 {
-                    Guid comGuid = new Guid(potatoArgs.clsid);
+                    Guid comGuid = new Guid(clsids[i]);
 
                     MULTI_QI[] qis = new MULTI_QI[1];
                     qis[0].pIID = NativeMethods.GuidToPointer(IUnknownGuid);
