@@ -133,7 +133,7 @@ namespace GodPotato
                     GodPotatoStorageTrigger storageTrigger = new GodPotatoStorageTrigger(storage, godPotatoContext);
                     try
                     {
-                        ConsoleWriter.WriteLine("[*] Trigger RPCS CLSID: " + comGuid);
+                        ConsoleWriter.WriteLine("[*] Trigger RPCSS CLSID: " + comGuid);
 
                         int hr = CoGetInstanceFromIStorage(null, ref comGuid, null, CLSCTX.LOCAL_SERVER, storageTrigger, 1, qis);
                         ConsoleWriter.WriteLine("[*] CoGetInstanceFromIStorage: 0x{0:x}", hr);

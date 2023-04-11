@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>GodPotato</RootNamespace>
     <AssemblyName>GodPotato</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
