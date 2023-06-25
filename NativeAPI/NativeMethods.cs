@@ -13,6 +13,8 @@ namespace GodPotato.NativeAPI
         public readonly static IntPtr BAD_HANLE = new IntPtr(-1);
 
 
+        public static readonly uint ERROR_PIPE_CONNECTED = 0x217;
+
         public static readonly uint HANDLE_FLAG_INHERIT = 0x00000001;
         public static readonly uint HANDLE_FLAG_PROTECT_FROM_CLOSE = 0x00000002;
 

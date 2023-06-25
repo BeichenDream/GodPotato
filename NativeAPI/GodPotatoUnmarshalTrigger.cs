@@ -11,10 +11,10 @@ namespace GodPotato.NativeAPI{
         private readonly static TowerProtocol towerProtocol = TowerProtocol.EPM_PROTOCOL_TCP;
 
 
-        public readonly static object fakeObject = new object();
-        public static IntPtr pIUnknown;
-        public static IBindCtx bindCtx;
-        public static IMoniker moniker;
+        public object fakeObject = new object();
+        public IntPtr pIUnknown;
+        public IBindCtx bindCtx;
+        public IMoniker moniker;
 
         private GodPotatoContext godPotatoContext;
 
@@ -28,20 +28,9 @@ namespace GodPotato.NativeAPI{
                 throw new Exception("GodPotatoContext was not initialized");
             }
 
-            if (pIUnknown == IntPtr.Zero)
-            {
-                pIUnknown = Marshal.GetIUnknownForObject(fakeObject);
-            }
-
-            if (bindCtx == null)
-            {
-                NativeMethods.CreateBindCtx(0, out bindCtx);
-            }
-
-            if (moniker == null)
-            {
-                NativeMethods.CreateObjrefMoniker(pIUnknown, out moniker);
-            }
+            pIUnknown = Marshal.GetIUnknownForObject(fakeObject);
+            NativeMethods.CreateBindCtx(0, out bindCtx);
+            NativeMethods.CreateObjrefMoniker(pIUnknown, out moniker);
 
         }
 
