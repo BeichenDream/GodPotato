@@ -966,36 +966,37 @@ namespace SharpToken
         public bool CreateProcess(string commandLine, bool bInheritHandles, uint dwCreationFlags, ref STARTUPINFO startupinfo, out PROCESS_INFORMATION processInformation)
         {
 
-            if (TokenType != TOKEN_TYPE.TokenPrimary)
+            IntPtr tmpTokenHandle = IntPtr.Zero;
+            if (NativeMethod.DuplicateTokenEx(this.TokenHandle, NativeMethod.TOKEN_ELEVATION, IntPtr.Zero, this.ImpersonationLevel, TOKEN_TYPE.TokenPrimary,
+                out tmpTokenHandle))
             {
-                IntPtr tmpTokenHandle = IntPtr.Zero;
-                if (NativeMethod.DuplicateTokenEx(this.TokenHandle, NativeMethod.TOKEN_ELEVATION, IntPtr.Zero, this.ImpersonationLevel, TOKEN_TYPE.TokenPrimary,
-                    out tmpTokenHandle))
-                {
-                    NativeMethod.CloseHandle(this.TokenHandle);
-                    this.TokenHandle = tmpTokenHandle;
-                }
-                else
-                {
-                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-                }
+                NativeMethod.CloseHandle(this.TokenHandle);
+                this.TokenHandle = tmpTokenHandle;
+            }
+            else
+            {
+                throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
             }
 
             NativeMethod.SetLastError(0);
 
-            if (NativeMethod.CreateProcessAsUserW(this.TokenHandle, null, commandLine, IntPtr.Zero, IntPtr.Zero, bInheritHandles, dwCreationFlags
-                    , IntPtr.Zero, null, ref startupinfo, out processInformation))
+
+
+            //The TokenHandle of CreateProcessWithTokenW must have TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY | TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_SESSIONID permissions
+
+            if (NativeMethod.CreateProcessWithTokenW(this.TokenHandle, 0, null, commandLine, dwCreationFlags, IntPtr.Zero, null, ref startupinfo,
+        out processInformation))
             {
                 return true;
             }
 
-            //CreateProcessWithTokenW的TokenHandle必须有TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY | TOKEN_ADJUST_DEFAULT | TOKEN_ADJUST_SESSIONID权限
-            if (NativeMethod.CreateProcessWithTokenW(this.TokenHandle, 0, null, commandLine, dwCreationFlags, IntPtr.Zero, null, ref startupinfo,
-                out processInformation))
+
+            if (NativeMethod.CreateProcessAsUserW(this.TokenHandle, null, commandLine, IntPtr.Zero, IntPtr.Zero, bInheritHandles, dwCreationFlags
+                                , IntPtr.Zero, null, ref startupinfo, out processInformation))
             {
                 return true;
             }
-            else
+            else if (Marshal.GetLastWin32Error() == 1314)
             {
                 uint newDwCreationFlags = dwCreationFlags | (uint)ProcessCreateFlags.CREATE_SUSPENDED;
                 newDwCreationFlags |= (uint)ProcessCreateFlags.CREATE_UNICODE_ENVIRONMENT;
@@ -1040,10 +1041,7 @@ namespace SharpToken
             }
 
             return false;
-
-
         }
-
         public void Close()
         {
             if (this.TokenHandle != IntPtr.Zero && !IsClose)
