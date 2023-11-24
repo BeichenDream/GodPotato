@@ -693,6 +693,8 @@ namespace SharpToken
 
         public bool IsClose { get; private set; }
 
+        private static readonly List<string> blackGroupSid = new List<string>();
+
         private ProcessToken()
         {
 
@@ -813,15 +815,29 @@ namespace SharpToken
 
                 for (int i = 0; i < groupCount; i++)
                 {
-                    try
+                    lock (blackGroupSid)
                     {
-                        securityIdentifier = new SecurityIdentifier(Marshal.ReadIntPtr(new IntPtr(tokenUserPtr.ToInt64() + offset)));
-                        offset += Marshal.SizeOf(typeof(SID_AND_ATTRIBUTES));
-                        goups.Add(securityIdentifier.Translate(typeof(NTAccount)).Value);
-                    }
-                    catch (Exception e)
-                    {
-                        continue;
+                        try
+                        {
+                            securityIdentifier = new SecurityIdentifier(Marshal.ReadIntPtr(new IntPtr(tokenUserPtr.ToInt64() + offset)));
+                            offset += Marshal.SizeOf(typeof(SID_AND_ATTRIBUTES));
+
+                            if (blackGroupSid.Contains(securityIdentifier.Value))
+                            {
+                                continue;
+                            }
+
+                            goups.Add(securityIdentifier.Translate(typeof(NTAccount)).Value);
+                        }
+                        catch (Exception e)
+                        {
+                            if (securityIdentifier != null)
+                            {
+                                blackGroupSid.Add(securityIdentifier.Value);
+                            }
+
+                            continue;
+                        }
                     }
                 }
                 Marshal.FreeHGlobal(tokenUserPtr);

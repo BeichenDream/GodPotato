@@ -158,6 +158,10 @@ namespace GodPotato.NativeAPI
             public IntPtr /* PMIDL_SYNTAX_INFO */ pSyntaxInfo;
         }
 
+        void aa() { 
+            
+        }
+
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool VirtualProtect([In] IntPtr pBlock,[In] uint size,[In] uint newProtect,[Out] out uint oldProtect);

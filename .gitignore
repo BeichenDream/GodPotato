@@ -1,3 +1,5 @@
 /.vs/
 /bin/
 /obj/
+GodPotato.csproj.user
+app.config
